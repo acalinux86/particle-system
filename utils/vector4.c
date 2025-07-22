@@ -20,9 +20,13 @@ Vector4 v4_direction(float x, float y, float z)
     return v4_init(x, y, z, 0.0f);
 }
 
-void v4_print(const Vector4 *self)
+void v4_print(const Vector4 *self, const char *name)
 {
-    printf("Vector4: [%.2f, %.2f, %.2f, %.2f]\n", self->x, self->y, self->z, self->w);
+    if (self->w != 0) {
+        printf("Point (%s): [%.2f, %.2f, %.2f, %.2f]\n", name, self->x, self->y, self->z, self->w);
+    } else {
+        printf("Direction (%s): [%.2f, %.2f, %.2f, %.2f]\n", name, self->x, self->y, self->z, self->w);
+    }
 }
 
 Vector4 v4_add(Vector4 a, Vector4 b) {
