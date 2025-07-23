@@ -8,6 +8,6 @@
 #include <errno.h>
 #include <assert.h>
 
-char *read_file(const char *file_path, uint32_t *size);
+char *read_file(const char *file_path, uint8_t *size);
 
 #endif // FILE_H_

@@ -12,7 +12,8 @@ typedef ARRAY(Vector2) Vector2_Array;
 void print_array(const Vector2_Array *va)
 {
     array_analysis(va);
-    for (uint32_t i = 0; i < va->count; ++i) {
+    for (uint32_t i = 0; i < va->count; ++i)
+    {
         printf("index %u: ", i); v2_print(&va->items[i]);
     }
     printf("\n");
@@ -27,7 +28,8 @@ bool log_shader_error(GLuint Id)
     glGetShaderiv(Id, GL_COMPILE_STATUS, &result);
     glGetShaderiv(Id, GL_INFO_LOG_LENGTH, &info_log_length);
     
-    if (info_log_length > 0) {
+    if (info_log_length > 0)
+    {
         char ErrorMessage[info_log_length];
         glGetShaderInfoLog(Id, info_log_length, NULL, ErrorMessage);
         printf("%s\n", &ErrorMessage[0]);
@@ -44,7 +46,8 @@ bool log_program_error(GLuint Id)
     glGetProgramiv(Id, GL_LINK_STATUS, &result);
     glGetProgramiv(Id, GL_INFO_LOG_LENGTH, &info_log_length);
     
-    if (info_log_length > 0) {
+    if (info_log_length > 0)
+    {
         char ErrorMessage[info_log_length + 1];
         glGetProgramInfoLog(Id, info_log_length, NULL, ErrorMessage);
         printf("%s\n", &ErrorMessage[0]);
@@ -55,7 +58,8 @@ bool log_program_error(GLuint Id)
 GLuint compile_vertex(char *vertex_code)
 {
     GLuint VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-    if (vertex_code == NULL) {
+    if (vertex_code == NULL)
+    {
         fprintf(stderr, "Vertex Shader Source is NULL");
         return 0;
     }
@@ -65,7 +69,8 @@ GLuint compile_vertex(char *vertex_code)
     glCompileShader(VertexShaderId);
     
     // Check Vertex Shader
-    if (!log_shader_error(VertexShaderId)) {
+    if (!log_shader_error(VertexShaderId))
+    {
         glDeleteShader(VertexShaderId);
         return 0;
     }
@@ -76,7 +81,8 @@ GLuint compile_vertex(char *vertex_code)
 GLuint compile_fragment(char *fragment_code)
 {
     GLuint FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    if (fragment_code == NULL) {
+    if (fragment_code == NULL)
+    {
         fprintf(stderr, "Fragment Shader Source is NULL.\n");
         return 0;
     }
@@ -86,7 +92,8 @@ GLuint compile_fragment(char *fragment_code)
     glCompileShader(FragmentShaderId);
 
     // Check fragment Shader
-    if (!log_shader_error(FragmentShaderId)) {
+    if (!log_shader_error(FragmentShaderId))
+    {
         glDeleteShader(FragmentShaderId);
         return 0;
     }
@@ -95,7 +102,7 @@ GLuint compile_fragment(char *fragment_code)
 
 GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
 {
-    uint32_t v_len, f_len;
+    uint8_t v_len, f_len = 0;
     char *vertex_code = read_file(vertex_file_path, &v_len);
     char *fragment_code = read_file(fragment_file_path, &f_len);
 
@@ -106,7 +113,8 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     GLuint FragmentShaderId = compile_fragment(fragment_code);
     GLuint VertexShaderId = compile_vertex(vertex_code);
 
-    if (FragmentShaderId == 0 || VertexShaderId == 0) {
+    if (FragmentShaderId == 0 || VertexShaderId == 0)
+    {
         if (VertexShaderId) glDeleteShader(VertexShaderId);
         if (FragmentShaderId) glDeleteShader(FragmentShaderId);
         free(vertex_code);
@@ -122,7 +130,8 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     glLinkProgram(ProgramId);
 
     // Check the Program
-    if (!log_program_error(ProgramId)) {
+    if (!log_program_error(ProgramId))
+    {
         fprintf(stderr, "Program Linking Failed.\n");
         glDeleteProgram(ProgramId);
         ProgramId = 0;
@@ -144,83 +153,129 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     return ProgramId; // return program id
 }
 
-int main(void)
+bool InitOpenGl(void)
 {
     glewExperimental = true;
-    if (!glfwInit()) {
+    if (!glfwInit())
+    {
         fprintf(stderr, "Failed to Initialize glfw.\n");
-        return 1;
+        return false;
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4); // Anti-Aliasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    
+    return true;
+}
 
+GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
+{
     GLFWwindow *window;
-    window = glfwCreateWindow(800, 600, "PARTICLE SYSTEM", NULL, NULL);
-    if (window == NULL) {
+    window = glfwCreateWindow(width, height, name, NULL, NULL);
+    if (window == NULL)
+    {
         fprintf(stderr, "Failed to Open GLFW Window.\n");
-        return 1;
+        return NULL;
     }
 
     glfwMakeContextCurrent(window);
     glewExperimental = true;
-    if (glewInit() != GLEW_OK) {
+    if (glewInit() != GLEW_OK)
+    {
         fprintf(stderr, "Failed to Initialize GLEW.\n");
-        return 1;
+        return NULL;
     }
+    // Enable blend
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    return window;
+}
 
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
-    glBindVertexArray(VertexArrayID);
+typedef struct {
+    GLuint VBO;
+    GLuint VAO;
+    GLuint ProgramID;
+} Renderer;
 
-    GLuint VertexBuffer;
-    glGenBuffers(1, &VertexBuffer);
+Renderer *CreateRenderer()
+{
+    Renderer *renderer = calloc(1, sizeof(Renderer));
+    if (renderer == NULL)
+    {
+        fprintf(stderr, "calloc() failed: Failed to Allocate Memory for Renderer.\n");
+        return NULL;
+    }
 
-    GLuint ProgramID = LoadShader("./shader/vertex_shader.vert", "./shader/fragment_shader.frag");
-    if (ProgramID == 0) {
+    glGenVertexArrays(1, &renderer->VAO);
+    glBindVertexArray(renderer->VAO);
+
+    glGenBuffers(1, &renderer->VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLuint)*9, NULL, GL_DYNAMIC_DRAW);
+
+    renderer->ProgramID = LoadShader("./shader/vertex_shader.vert", "./shader/fragment_shader.frag");
+    if (renderer->ProgramID == 0)
+    {
+        return NULL;
+    }
+    return renderer;
+}
+
+void DrawTriangle(Renderer *renderer, Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color)
+{
+    GLfloat vertices[] = {
+        v1.x, v1.y, 0.0f,
+        v2.x, v2.y, 0.0f,
+        v3.x, v3.y, 0.0f,
+    };
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+    glUseProgram(renderer->ProgramID);
+    // Draw the triangle !
+    glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+    glDisableVertexAttribArray(0);
+    glUniform4f(glGetUniformLocation(renderer->ProgramID, "our_color"), color.x, color.y, color.z, color.w); // Red
+}
+
+int main(void)
+{
+    if (!InitOpenGl()) return 1;
+
+    GLFWwindow *window = CreateWindowWithContext(800, 600, "PARTICLE SYSTEM");
+    if (window == NULL)
+    {
         return 1;
     }
 
-    do {
+    Renderer *renderer = CreateRenderer();
+    if (renderer == NULL)
+    {
+        return 1;
+    }
+
+    Vector4 red = v4_init(1.0, 0.0, 0.0, 0.2);
+    Vector4 blue = v4_init(0.0, 0.0, 1.0, 1.0);
+
+    do
+    {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        DrawTriangle(renderer,
+                     v2_init(0.0f, 0.5f),
+                     v2_init(0.0f, 0.0f),
+                     v2_init(1.0f, 0.0f), red);
 
-
-        float time = glfwGetTime();
-        float offsetX = sin(time) * 0.5f; // Oscillate between -0.5 and 0.5
-
-        GLfloat g_vertex_buffer_data[] = {
-            -0.5f + offsetX, -0.5f, 0.0f,
-             0.5f + offsetX, -0.5f, 0.0f,
-             0.0f + offsetX,  0.5f, 0.0f,
-
-            // Second triangle (shifted right)
-            0.5f + offsetX,  0.5f, 0.0f,
-            1.5f + offsetX,  0.5f, 0.0f,
-            1.0f + offsetX, -0.5f, 0.0f
-        };
-        glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_DYNAMIC_DRAW);
-        
-        glEnableVertexAttribArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
-        glVertexAttribPointer(
-            0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
-            3,                  // size
-            GL_FLOAT,           // type
-            GL_FALSE,           // normalized?
-            0,                  // stride
-            (void*)0            // array buffer offset
-        );
-
-        glUseProgram(ProgramID);
-        // Draw the triangle !
-        glDrawArrays(GL_TRIANGLES, 0, 3*2); // Starting from vertex 0; 3 vertices total -> 1 triangle
-        glDisableVertexAttribArray(0);
-
+        DrawTriangle(renderer,
+                     v2_init(1.0f, 0.0f),
+                     v2_init(1.0f, 0.5f),
+                     v2_init(0.0f, 0.5f), blue);
         glfwSwapBuffers(window);
         glfwPollEvents();
     } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && 

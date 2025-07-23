@@ -1,9 +1,10 @@
 #include "./file.h"
 
-char *read_file(const char *file_path, uint32_t *size)
+char *read_file(const char *file_path, uint8_t *size)
 {
     FILE *fp = fopen(file_path, "rb");
-    if (fp == NULL) {
+    if (fp == NULL)
+    {
         fprintf(stderr, "Failed to open file %s: %s.\n", file_path, strerror(errno));
         return NULL;
     }
@@ -12,8 +13,9 @@ char *read_file(const char *file_path, uint32_t *size)
     uint32_t len = ftell(fp);
     fseek(fp, 0, SEEK_SET);
 
-    char *buffer = malloc(len+1);
-    if (buffer == NULL) {
+    char *buffer = calloc(len+1, sizeof(char));
+    if (buffer == NULL)
+    {
         fprintf(stderr, "Failed to Allocate Memory For Buffer.\n");
         return NULL;
     }
@@ -21,7 +23,8 @@ char *read_file(const char *file_path, uint32_t *size)
     size_t n = fread(buffer, 1, len, fp);
     assert(n == (size_t) len);
 
-    if (ferror(fp) < 0) {
+    if (ferror(fp) < 0)
+    {
         fprintf(stderr, "fread failed!.\n");
         return NULL;
     }
@@ -32,4 +35,3 @@ char *read_file(const char *file_path, uint32_t *size)
     fclose(fp);
     return buffer;
 }
-
