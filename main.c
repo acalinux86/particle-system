@@ -217,12 +217,30 @@ Renderer *CreateRenderer()
     glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLuint)*9, NULL, GL_DYNAMIC_DRAW);
 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glEnableVertexAttribArray(0);
+
     renderer->ProgramID = LoadShader("./shader/vertex_shader.vert", "./shader/fragment_shader.frag");
     if (renderer->ProgramID == 0)
     {
+        fprintf(stderr, "Shader Loading Failed.\n");
+        glDeleteBuffers(1, &renderer->VBO);
+        glDeleteVertexArrays(1, &renderer->VAO);
+        free(renderer);
         return NULL;
     }
     return renderer;
+}
+
+void DestroyRenderer(Renderer *renderer)
+{
+    if (renderer)
+    {
+        glDeleteProgram(renderer->ProgramID);
+        glDeleteBuffers(1, &renderer->VBO);
+        glDeleteVertexArrays(1, &renderer->VAO);
+        free(renderer);
+    }
 }
 
 void DrawTriangle(Renderer *renderer, Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color)
@@ -233,16 +251,20 @@ void DrawTriangle(Renderer *renderer, Vector2 v1, Vector2 v2, Vector2 v3, Vector
         v3.x, v3.y, 0.0f,
     };
 
-    glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 
     glUseProgram(renderer->ProgramID);
     // Draw the triangle !
     glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    glDisableVertexAttribArray(0);
     glUniform4f(glGetUniformLocation(renderer->ProgramID, "our_color"), color.x, color.y, color.z, color.w); // Red
+}
+
+bool WindowShouldClose(GLFWwindow *window)
+{
+    if (window == NULL) return true;
+    return glfwWindowShouldClose(window) ||
+           glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
 }
 
 int main(void)
@@ -258,13 +280,14 @@ int main(void)
     Renderer *renderer = CreateRenderer();
     if (renderer == NULL)
     {
+        glfwTerminate();
         return 1;
     }
 
-    Vector4 red = v4_init(1.0, 0.0, 0.0, 0.2);
-    Vector4 blue = v4_init(0.0, 0.0, 1.0, 1.0);
+    Vector4 red = v4_init(1, 0, 0, 1.0);
+    Vector4 blue = v4_init(0.23, 0, 0.23, 1.0);
 
-    do
+    while (!WindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         DrawTriangle(renderer,
@@ -278,9 +301,10 @@ int main(void)
                      v2_init(0.0f, 0.5f), blue);
         glfwSwapBuffers(window);
         glfwPollEvents();
-    } while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && 
-             glfwWindowShouldClose(window) == 0);
-    
+    }
+
+    DestroyRenderer(renderer);
+    glfwTerminate();
     return 0;
 }
 
