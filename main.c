@@ -4,7 +4,8 @@
 #include "./utils/vector4.h"
 #include "./utils/matrix.h"
 #include "./utils/matvec.h"
-#include "./file.h"
+#include "./utils/file.h"
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
