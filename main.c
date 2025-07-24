@@ -101,8 +101,8 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     char *fragment_code = read_file(fragment_file_path, &f_len);
 
     // Debug print the shader sources
-    Log(INFO, "Vertex shader source (%u bytes):\n", v_len);
-    Log(INFO, "Fragment shader source (%u bytes):\n", f_len);
+    Log(INFO, "Vertex shader source (%u bytes)\n", v_len);
+    Log(INFO, "Fragment shader source (%u bytes)\n", f_len);
     
     GLuint FragmentShaderId = compile_fragment(fragment_code);
     GLuint VertexShaderId = compile_vertex(vertex_code);
@@ -199,7 +199,8 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
     const GLubyte *vendor = glGetString(GL_VENDOR);
     Log(INFO, "Vendor: %s\n", vendor);
 
-    glDisable(GL_DEPTH_TEST); 
+    glDisable(GL_DEPTH_TEST);
+
     // Enable blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -415,7 +416,7 @@ int main(void)
     Log(INFO, "Renderer Created SuccessFully.\n");
 
     Vector4 red = v4_init(1, 0, 0, 1.0);
-    Vector4 green = v4_init(0, 1, 0, 1.0);
+    Vector4 green = v4_init(0, 1, 0, 0.1);
 
     while (!WindowShouldClose(window))
     {
