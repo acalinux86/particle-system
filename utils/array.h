@@ -1,7 +1,7 @@
 #ifndef ARRAY_H_
 #define ARRAY_H_
 
-#define INITIAL_CAPACITY 5
+#define INITIAL_CAPACITY 256
 
 #include <assert.h>
 #include <stdio.h>
@@ -15,6 +15,15 @@
         uint32_t count;    \
         uint32_t capacity; \
     }
+
+// NOTE: New Array
+#define array_new(array, new_capacity)                                                           \
+    do {                                                                           \
+        (array)->items = calloc(new_capacity, sizeof(*(array)->items));       \
+        assert((array)->items != NULL && "Initial malloc() for new Array Failed"); \
+        (array)->count = 0;                                                        \
+        (array)->capacity = new_capacity;                                      \
+    } while(0)
 
 // NOTE: Remove An Element of Specified Index and Shift the Array
 #define array_delete_item(array, index)                             \
