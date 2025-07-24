@@ -5,22 +5,12 @@
 #include "./utils/matrix.h"
 #include "./utils/matvec.h"
 #include "./utils/file.h"
+#include "./utils/log.h"
 
 #include <stddef.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
-typedef ARRAY(Vector2) Vector2_Array;
-void print_array(const Vector2_Array *va)
-{
-    array_analysis(va);
-    for (uint32_t i = 0; i < va->count; ++i)
-    {
-        printf("index %u: ", i); v2_print(&va->items[i]);
-    }
-    printf("\n");
-}
 
 bool log_shader_error(GLuint Id)
 {
@@ -35,7 +25,7 @@ bool log_shader_error(GLuint Id)
     {
         char ErrorMessage[info_log_length];
         glGetShaderInfoLog(Id, info_log_length, NULL, ErrorMessage);
-        printf("%s\n", &ErrorMessage[0]);
+        Log(ERROR, "%s\n", &ErrorMessage[0]);
     }
     return result == GL_TRUE;
 }
@@ -53,7 +43,7 @@ bool log_program_error(GLuint Id)
     {
         char ErrorMessage[info_log_length + 1];
         glGetProgramInfoLog(Id, info_log_length, NULL, ErrorMessage);
-        printf("%s\n", &ErrorMessage[0]);
+        Log(ERROR, "%s\n", &ErrorMessage[0]);
     }
     return result == GL_TRUE;
 }
@@ -63,11 +53,11 @@ GLuint compile_vertex(char *vertex_code)
     GLuint VertexShaderId = glCreateShader(GL_VERTEX_SHADER);
     if (vertex_code == NULL)
     {
-        fprintf(stderr, "Vertex Shader Source is NULL");
+        Logf(stderr, ERROR, "Vertex Shader Source is NULL");
         return 0;
     }
 
-    printf("Compiling Shader Program...\n");
+    Log(INFO, "Compiling Vertex Shader Program...\n");
     glShaderSource(VertexShaderId, 1, (const GLchar* const*)&vertex_code, NULL);
     glCompileShader(VertexShaderId);
     
@@ -77,7 +67,7 @@ GLuint compile_vertex(char *vertex_code)
         glDeleteShader(VertexShaderId);
         return 0;
     }
-
+    Log(INFO, "SuccessFully Compiled Vertex Shader.\n");
     return VertexShaderId;
 }
 
@@ -86,11 +76,11 @@ GLuint compile_fragment(char *fragment_code)
     GLuint FragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
     if (fragment_code == NULL)
     {
-        fprintf(stderr, "Fragment Shader Source is NULL.\n");
+        Logf(stderr, ERROR, "Fragment Shader Source is NULL.\n");
         return 0;
     }
 
-    printf("Compiling Shader Program...\n");
+    Log(INFO, "Compiling Fragment Shader Program...\n");
     glShaderSource(FragmentShaderId, 1, (const GLchar* const*)&fragment_code, NULL);
     glCompileShader(FragmentShaderId);
 
@@ -100,6 +90,7 @@ GLuint compile_fragment(char *fragment_code)
         glDeleteShader(FragmentShaderId);
         return 0;
     }
+    Log(INFO, "SuccessFully Compiled Fragment Shader.\n");
     return FragmentShaderId;
 }
 
@@ -110,8 +101,8 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     char *fragment_code = read_file(fragment_file_path, &f_len);
 
     // Debug print the shader sources
-    printf("Vertex shader source (%u bytes):\n%.*s\n", v_len, v_len, vertex_code);
-    printf("Fragment shader source (%u bytes):\n%.*s\n", f_len, f_len, fragment_code);
+    Log(INFO, "Vertex shader source (%u bytes):\n", v_len);
+    Log(INFO, "Fragment shader source (%u bytes):\n", f_len);
     
     GLuint FragmentShaderId = compile_fragment(fragment_code);
     GLuint VertexShaderId = compile_vertex(vertex_code);
@@ -126,7 +117,7 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     }
 
     // Link the Program
-    printf("Linking Programs...\n");
+    Log(INFO, "Linking Programs...\n");
     GLuint ProgramId = glCreateProgram();
     glAttachShader(ProgramId, VertexShaderId);
     glAttachShader(ProgramId, FragmentShaderId);
@@ -135,12 +126,14 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     // Check the Program
     if (!log_program_error(ProgramId))
     {
-        fprintf(stderr, "Program Linking Failed.\n");
+        Logf(stderr, ERROR, "Program Linking Failed.\n");
         glDeleteProgram(ProgramId);
         ProgramId = 0;
         return 0;
     }
-    
+    Log(INFO, "SuccessFully Linked Program.\n");
+
+    Log(INFO, "Detaching and Deleting Shaders...\n");
     // Detach Shaders
     glDetachShader(ProgramId, VertexShaderId);
     glDetachShader(ProgramId, FragmentShaderId);
@@ -148,20 +141,22 @@ GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path)
     // Delete Shader Id
     glDeleteShader(VertexShaderId);
     glDeleteShader(FragmentShaderId);
-
+    
+    Log(INFO, "SuccessFully Detached and Deleted the Shaders.\n");
     // Free the shader buffers
     free(vertex_code);
     free(fragment_code);
-
+    Log(INFO, "SuccessFully Freed the Shader Buffers\n");
     return ProgramId; // return program id
 }
 
 bool InitOpenGl(void)
 {
+    Log(INFO, "Initializing OpenGL\n");
     glewExperimental = true;
     if (!glfwInit())
     {
-        fprintf(stderr, "Failed to Initialize glfw.\n");
+        Logf(stderr, ERROR, "Failed to Initialize glfw.\n");
         return false;
     }
 
@@ -169,7 +164,8 @@ bool InitOpenGl(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    
+
+    Log(INFO, "SuccessFully Initialized GLFW.\n");
     return true;
 }
 
@@ -190,12 +186,27 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
         fprintf(stderr, "Failed to Initialize GLEW.\n");
         return NULL;
     }
+    Log(INFO, "SuccessFully Initialized GLEW\n");
+    const GLubyte *version = glGetString(GL_VERSION);
+    Log(INFO, "OpenGL Version: %s\n", version);
+
+    const GLubyte *renderer = glGetString(GL_RENDERER);
+    Log(INFO, "Renderer Version: %s\n", renderer);
+
+    const GLubyte *glsl_version = glGetString(GL_SHADING_LANGUAGE_VERSION);
+    Log(INFO, "GLSL Version: %s\n", glsl_version);
+
+    const GLubyte *vendor = glGetString(GL_VENDOR);
+    Log(INFO, "Vendor: %s\n", vendor);
+
     glDisable(GL_DEPTH_TEST); 
     // Enable blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Log(INFO, "ALPHA Blend Enabled\n");
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+    Log(INFO, "Input Mode Enabled\n");
     return window;
 }
 
@@ -265,18 +276,20 @@ void DestroyRenderer(Renderer *renderer)
 {
     if (renderer)
     {
+        Log(INFO, "Destroying Renderer...\n");
         glDeleteProgram(renderer->ProgramID);
         glDeleteBuffers(1, &renderer->VBO);
         glDeleteVertexArrays(1, &renderer->VAO);
         array_delete(&renderer->va);
         free(renderer);
+        Log(INFO, "SuccessFully Destroyed Renderer\n");
     }
 }
 
 void Flush(Renderer *renderer)
 {
     if (renderer->va.count == 0) {
-        printf("Nothing to flush\n");
+        Log(WARN, "Nothing to flush\n");
         return;
     }
 
@@ -297,7 +310,7 @@ void Flush(Renderer *renderer)
     
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
-        printf("OpenGL error during draw call: %d\n", err);
+        Log(ERROR, "OpenGL error during draw call: %d\n", err);
     }
     renderer->indices.count = 0;
     renderer->va.count = 0;
@@ -391,6 +404,7 @@ int main(void)
     {
         return 1;
     }
+    Log(INFO, "Window Opened SuccessFully.\n");
 
     Renderer *renderer = CreateRenderer();
     if (renderer == NULL)
@@ -398,6 +412,7 @@ int main(void)
         glfwTerminate();
         return 1;
     }
+    Log(INFO, "Renderer Created SuccessFully.\n");
 
     Vector4 red = v4_init(1, 0, 0, 1.0);
     Vector4 green = v4_init(0, 1, 0, 1.0);
