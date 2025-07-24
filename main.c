@@ -6,6 +6,8 @@
 #include "./utils/matvec.h"
 #include "./utils/file.h"
 
+#include <stddef.h>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -188,6 +190,7 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
         fprintf(stderr, "Failed to Initialize GLEW.\n");
         return NULL;
     }
+    glDisable(GL_DEPTH_TEST); 
     // Enable blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -197,9 +200,22 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
 }
 
 typedef struct {
+    Vector3 position;
+    Vector4 color;
+} Vertex;
+
+typedef ARRAY(Vertex) Vertices;
+
+typedef ARRAY(uint32_t) Indices;
+
+typedef struct {
     GLuint VBO;
     GLuint VAO;
+    GLuint EBO;
     GLuint ProgramID;
+    Vertices va;
+    Indices indices;
+    GLenum current_mode;
 } Renderer;
 
 Renderer *CreateRenderer()
@@ -211,15 +227,26 @@ Renderer *CreateRenderer()
         return NULL;
     }
 
+    array_new(&renderer->va, 1024);
+    array_new(&renderer->indices, 2048);
+
     glGenVertexArrays(1, &renderer->VAO);
     glBindVertexArray(renderer->VAO);
 
     glGenBuffers(1, &renderer->VBO);
     glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLuint)*9, NULL, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, renderer->va.capacity*sizeof(renderer->va.items[0]), NULL, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glGenBuffers(1, &renderer->EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, renderer->indices.capacity*sizeof(renderer->indices.items[0]), NULL, GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(renderer->va.items[0]),
+                          (void*)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(renderer->va.items[0]), (void*)offsetof(Vertex, color));
+    glEnableVertexAttribArray(1);
 
     renderer->ProgramID = LoadShader("./shader/vertex_shader.vert", "./shader/fragment_shader.frag");
     if (renderer->ProgramID == 0)
@@ -227,6 +254,7 @@ Renderer *CreateRenderer()
         fprintf(stderr, "Shader Loading Failed.\n");
         glDeleteBuffers(1, &renderer->VBO);
         glDeleteVertexArrays(1, &renderer->VAO);
+        array_delete(&renderer->va);
         free(renderer);
         return NULL;
     }
@@ -240,25 +268,111 @@ void DestroyRenderer(Renderer *renderer)
         glDeleteProgram(renderer->ProgramID);
         glDeleteBuffers(1, &renderer->VBO);
         glDeleteVertexArrays(1, &renderer->VAO);
+        array_delete(&renderer->va);
         free(renderer);
     }
 }
 
-void DrawTriangle(Renderer *renderer, Vector2 v1, Vector2 v2, Vector2 v3, Vector4 color)
+void Flush(Renderer *renderer)
 {
-    GLfloat vertices[] = {
-        v1.x, v1.y, 0.0f,
-        v2.x, v2.y, 0.0f,
-        v3.x, v3.y, 0.0f,
-    };
+    if (renderer->va.count == 0) {
+        printf("Nothing to flush\n");
+        return;
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(renderer->va.items[0]) * renderer->va.count, renderer->va.items);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->EBO);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(renderer->indices.items[0]) * renderer->indices.count, renderer->indices.items);
+    
     glUseProgram(renderer->ProgramID);
-    // Draw the triangle !
-    glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
-    glUniform4f(glGetUniformLocation(renderer->ProgramID, "our_color"), color.x, color.y, color.z, color.w); // Red
+    // glUniform4f(glGetUniformLocation(renderer->ProgramID, "fragColor"),
+    //             renderer->va.items[0].color.x,
+    //             renderer->va.items[0].color.y,
+    //             renderer->va.items[0].color.z,
+    //             renderer->va.items[0].color.w);
+
+    glDrawElements(renderer->current_mode, renderer->indices.count, GL_UNSIGNED_INT, (void*)0);
+    
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        printf("OpenGL error during draw call: %d\n", err);
+    }
+    renderer->indices.count = 0;
+    renderer->va.count = 0;
+}
+
+void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector4 color)
+{
+    if (renderer->va.count + 3 > renderer->va.capacity ||
+        renderer->current_mode != GL_TRIANGLES) {
+        Flush(renderer);
+        renderer->current_mode = GL_TRIANGLES;
+    }
+    uint32_t base = renderer->va.count;
+    array_append(&renderer->va, ((Vertex){v1, color}));
+    array_append(&renderer->va, ((Vertex){v2, color}));
+    array_append(&renderer->va, ((Vertex){v3, color}));
+
+    uint32_t tri_indices[3] = {base, base+1, base+2};
+    for (uint32_t i = 0; i < 3; ++i)
+    {
+        array_append(&renderer->indices, tri_indices[i]);
+    }
+}
+
+void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
+{
+    if (renderer->va.count + 2 > renderer->va.capacity ||
+        renderer->current_mode != GL_LINES) {
+        Flush(renderer);
+        renderer->current_mode = GL_LINES;
+    }
+
+    uint32_t base_index = renderer->va.count;
+    array_append(&renderer->va, ((Vertex){v1, color}));
+    array_append(&renderer->va, ((Vertex){v2, color}));
+    
+    uint32_t line_indices[2] = {base_index, base_index+1};
+    for (uint32_t i = 0; i < 2; ++i)
+    {
+        array_append(&renderer->indices, line_indices[i]);
+    }
+}
+
+void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 color)
+{
+    if (renderer->indices.count + 6 > renderer->indices.capacity ||
+        renderer->va.count + 4 > renderer->va.capacity ||
+        renderer->current_mode != GL_TRIANGLES) {
+        Flush(renderer);
+        renderer->current_mode = GL_TRIANGLES;
+    }
+
+    // Calculate corner positions
+    Vector3 half_size = v3_scale(size, 0.5);
+    Vector3 corners[4] = {
+        v3_add(position, v3_init(-half_size.x, -half_size.y, 0.0f)), // botom-left
+        v3_add(position, v3_init(-half_size.x,  half_size.y, 0.0f)), // top-left
+        v3_add(position, v3_init(half_size.x,   half_size.y, 0.0f)), // top-right
+        v3_add(position, v3_init(half_size.x,  -half_size.y, 0.0f)), // bottom-right
+    };
+
+    uint32_t base_index = renderer->indices.count;
+    for (uint32_t i = 0; i < 4; ++i)
+    {
+        array_append(&renderer->va, ((Vertex){corners[i], color}));
+    }
+
+    uint32_t quad_indices[6] = {
+        base_index, base_index+1, base_index+2,
+        base_index, base_index+2, base_index+3
+    };
+    for (uint32_t i = 0; i < 6; ++i)
+    {
+        array_append(&renderer->indices, quad_indices[i]);
+    }
 }
 
 bool WindowShouldClose(GLFWwindow *window)
@@ -286,20 +400,26 @@ int main(void)
     }
 
     Vector4 red = v4_init(1, 0, 0, 1.0);
-    Vector4 blue = v4_init(0.23, 0, 0.23, 1.0);
+    Vector4 green = v4_init(0, 1, 0, 1.0);
 
     while (!WindowShouldClose(window))
     {
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         DrawTriangle(renderer,
-                     v2_init(0.0f, 0.5f),
-                     v2_init(0.0f, 0.0f),
-                     v2_init(1.0f, 0.0f), red);
+                     v3_init(-0.5f, 0.5f, 0.0f),
+                     v3_init(-0.5f, -0.5f, 0.0f),
+                     v3_init(0.25f, -0.5f, 0.0f), red);
 
-        DrawTriangle(renderer,
-                     v2_init(1.0f, 0.0f),
-                     v2_init(1.0f, 0.5f),
-                     v2_init(0.0f, 0.5f), blue);
+        DrawLines(renderer,
+                  v3_init(-0.8f, 0.8f, 0.0f),
+                  v3_init(0.8f, 0.8f, 0.0f),
+                  red);
+
+        DrawRectangle(renderer,
+                      v3_init(0.4f, 0.4f, 0.0f),
+                      v3_init(0.0f, 0.0f, 0.0f),
+                      green);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
