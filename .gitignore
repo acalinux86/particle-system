@@ -3,3 +3,6 @@ notes.md
 
 # Ignore the Build Folder
 build/
+
+# Ignore the Object Folder
+obj/
