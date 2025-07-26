@@ -1,6 +1,6 @@
 #include "./system.h"
 
-Renderer *CreateRenderer()
+Renderer *CreateRenderer(GLFWwindow *window)
 {
     Renderer *renderer = calloc(1, sizeof(Renderer));
     if (renderer == NULL)
@@ -8,6 +8,12 @@ Renderer *CreateRenderer()
         fprintf(stderr, "calloc() failed: Failed to Allocate Memory for Renderer.\n");
         return NULL;
     }
+
+    renderer->window = window;
+    int w, h;
+    glfwGetWindowSize(renderer->window, &w, &h);
+    renderer->window_width = w;
+    renderer->window_height = h;
 
     array_new(&renderer->va, 1024);
     array_new(&renderer->indices, 2048);
@@ -85,4 +91,16 @@ void Flush(Renderer *renderer)
     }
     renderer->indices.count = 0;
     renderer->va.count = 0;
+}
+
+void DetectWindowSizeChange(Renderer *renderer)
+{
+    int w, h;
+    glfwGetWindowSize(renderer->window, &w, &h);
+    if (renderer->window_width != w ||
+        renderer->window_height != h) {
+        Log(INFO, "Window Size Change Detected: Width: %d, Height: %d\n", w, h);
+        renderer->window_width = w;
+        renderer->window_height = h;
+    }
 }

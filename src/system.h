@@ -31,6 +31,8 @@ typedef struct {
     Vertices va;
     Indices indices;
     GLenum current_mode;
+    int window_width, window_height;
+    GLFWwindow *window;
 } Renderer;
 
 bool InitOpenGl(void);
@@ -46,9 +48,10 @@ GLuint compile_vertex(char *vertex_code);
 GLuint compile_fragment(char *fragment_code);
 GLuint LoadShader(const char *vertex_file_path, const char *fragment_file_path);
 
-Renderer *CreateRenderer();
+Renderer *CreateRenderer(GLFWwindow *window);
 void DestroyRenderer(Renderer *renderer);
 void Flush(Renderer *renderer);
+void DetectWindowSizeChange(Renderer *renderer);
 
 void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector4 color);
 void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color);
