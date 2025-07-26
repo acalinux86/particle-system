@@ -10,8 +10,12 @@ int main(void)
         return 1;
     }
     Log(INFO, "Window Opened SuccessFully.\n");
+    
+    int w , h;
+    glfwGetWindowSize(window, &w, &h);
+    Log(DEBUG, "Window Width: %d Window Height: %d\n", w, h);
 
-    Renderer *renderer = CreateRenderer();
+    Renderer *renderer = CreateRenderer(window);
     if (renderer == NULL)
     {
         glfwTerminate();
@@ -40,6 +44,7 @@ int main(void)
                       v3_init(0.4f, 0.4f, 0.0f),
                       v3_init(0.0f, 0.0f, 0.0f),
                       green);
+        DetectWindowSizeChange(renderer);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
