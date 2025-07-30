@@ -81,4 +81,11 @@
 #define array_analysis(array)\
     printf("Array Count: %u\nArray Capacity: %u\n\n", (array)->count, (array)->capacity);\
 
+#define array_reset(array)                    \
+    do {                                      \
+        array_delete((array));                \
+        array_new((array), INITIAL_CAPACITY); \
+    } while (0)
+
+
 #endif // ARRAY_H_

@@ -36,6 +36,8 @@ int main(void)
                       v3_init(0.0f, 0.0f, 0.0f),
                       green);
         DetectWindowSizeChange(renderer);
+        array_reset(&renderer->indices);
+        array_reset(&renderer->va);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

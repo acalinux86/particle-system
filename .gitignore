@@ -6,3 +6,6 @@ build/
 
 # Ignore the Object Folder
 obj/
+
+# Ignore the symlink to Debugger
+gf2
