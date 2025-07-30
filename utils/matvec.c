@@ -49,10 +49,13 @@ Vector3 to_screen_coords(Vector3 vec3, float screen_width, float screen_height)
     Vector4 vec4 = v4_from_v3(vec3);
     V4_PRINT(vec4);
 
+    float x = screen_width / 2.0f;
+    float y = screen_height / 2.0f;
+
     Matrix4 ModelMatrix = {
         .rows = {
-            {screen_width/2.0f, 0.0f, 0.0f, screen_width/2.0f},
-            {0.0f, -screen_height/2.0f, 0.0f, screen_height/2.0f},
+            {x,    0.0f, 0.0f,    x},
+            {0.0f,   -y, 0.0f,    y},
             {0.0f, 0.0f, 1.0f, 0.0f},
             {0.0f, 0.0f, 0.0f, 1.0f}
         }
