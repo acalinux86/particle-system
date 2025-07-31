@@ -1,5 +1,10 @@
 #include "./src/system.h"
 
+#define RED (Color){255, 0, 0, 255}
+#define YELLOW (Color){255, 255, 0, 255}
+#define GREY (Color){128, 128, 128, 255}
+#define PURPLE (Color){160, 32, 240, 255}
+
 int main(void)
 {
     if (!InitOpenGl()) return 1;
@@ -32,12 +37,13 @@ int main(void)
 
     double last_time = glfwGetTime();
     double frame_count = 0.0;
+    COLOR_PRINT(GREY);
+    Color grey = color_to_gl(GREY);
+    COLOR_PRINT(grey);
     // Render Many quads on the screen then access each of it
     while (!WindowShouldClose(window))
     {
-        glClearColor(0.2f, 0.3f, 0.1f, 0.4f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        set_background(PURPLE);
         DrawRectangle(renderer, size, position, green);
         DetectWindowSizeChange(renderer);
 
