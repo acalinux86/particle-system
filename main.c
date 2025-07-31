@@ -32,15 +32,12 @@ int main(void)
     // Render Many quads on the screen then access each of it
     while (!WindowShouldClose(window))
     {
-//        glClearColor(0.2f, 0.3f, 0.1f, 0.4f);
+        glClearColor(0.2f, 0.3f, 0.1f, 0.4f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        DrawRectangle(renderer,
-                      v3_init(0.2f, 0.2f, 0.0f),
+        DrawRectangle(renderer, v3_init(0.2f, 0.2f, 0.0f),
                       v3_init(0.0f, 0.0f, 0.0f),
                       green);
         DetectWindowSizeChange(renderer);
-        array_reset(&renderer->indices);
-        array_reset(&renderer->va);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

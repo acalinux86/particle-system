@@ -17,6 +17,7 @@ void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector
     {
         array_append(&renderer->indices, tri_indices[i]);
     }
+    Flush(renderer);
 }
 
 void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
@@ -30,12 +31,13 @@ void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
     uint32_t base_index = renderer->va.count;
     array_append(&renderer->va, ((Vertex){v1, color}));
     array_append(&renderer->va, ((Vertex){v2, color}));
-    
+
     uint32_t line_indices[2] = {base_index, base_index+1};
     for (uint32_t i = 0; i < 2; ++i)
     {
         array_append(&renderer->indices, line_indices[i]);
     }
+    Flush(renderer);
 }
 
 void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 color)
@@ -49,11 +51,13 @@ void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 c
 
     // Calculate corner positions
     Vector3 half_size = v3_scale(size, 0.5);
+    float x = half_size.x;
+    float y = half_size.y;
     Vector3 corners[4] = {
-        v3_add(position, v3_init(-half_size.x, -half_size.y, 0.0f)), // botom-left
-        v3_add(position, v3_init(-half_size.x,  half_size.y, 0.0f)), // top-left
-        v3_add(position, v3_init(half_size.x,   half_size.y, 0.0f)), // top-right
-        v3_add(position, v3_init(half_size.x,  -half_size.y, 0.0f)), // bottom-right
+        v3_add(position, v3_init(-x,  -y, 0.0f)), // botom-left
+        v3_add(position, v3_init(-x,   y, 0.0f)), // top-left
+        v3_add(position, v3_init( x,   y, 0.0f)), // top-right
+        v3_add(position, v3_init( x,  -y, 0.0f)), // bottom-right
     };
 
     uint32_t base_index = renderer->indices.count;
@@ -70,4 +74,5 @@ void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 c
     {
         array_append(&renderer->indices, quad_indices[i]);
     }
+    Flush(renderer);
 }
