@@ -26,18 +26,29 @@ int main(void)
     }
     Log(INFO, "Renderer Created SuccessFully.\n");
 
-    Vector4 red = v4_init(1, 0, 0, 1.0);
     Vector4 green = v4_init(0, 0.8, 0, 1.0);
+    Vector3 size = v3_init(0.2f, 0.2f, 0.0f);
+    Vector3 position = v3_init(0.0f, 0.0f, 0.0f);
 
+    double last_time = glfwGetTime();
+    double frame_count = 0.0;
     // Render Many quads on the screen then access each of it
     while (!WindowShouldClose(window))
     {
         glClearColor(0.2f, 0.3f, 0.1f, 0.4f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        DrawRectangle(renderer, v3_init(0.2f, 0.2f, 0.0f),
-                      v3_init(0.0f, 0.0f, 0.0f),
-                      green);
+
+        DrawRectangle(renderer, size, position, green);
         DetectWindowSizeChange(renderer);
+
+        double current_time = glfwGetTime();
+        frame_count++;
+        if (current_time - last_time > 1.0f) {
+            double fps = frame_count / (current_time - last_time);
+            Log(INFO, "FPS: %.2lf\n", fps);
+            frame_count = 0.0;
+            last_time = current_time;
+        }
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
