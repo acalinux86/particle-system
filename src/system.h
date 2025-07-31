@@ -31,9 +31,17 @@ typedef struct {
     GLFWwindow *window;
 } Renderer;
 
+typedef struct {
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+} Color;
+
 bool InitOpenGl(void);
 GLFWwindow *CreateWindowWithContext(int width, int height, const char *name);
 bool WindowShouldClose(GLFWwindow *window);
+void set_background(Color color);
 
 bool log_shader_error(GLuint Id);
 bool log_program_error(GLuint Id);
@@ -66,5 +74,9 @@ void Logging(FILE *stream, Log_Levels level, const char *fmt, ...);
 
 #define Log(level, fmt, ...) Logging(stdout, level, fmt, ##__VA_ARGS__)
 #define Logf(stream, level, fmt, ...) Logging(stream, level, fmt, ##__VA_ARGS__)
+
+Color color_to_gl(Color color);
+void color_print(Color color, const char *name);
+#define COLOR_PRINT(color) color_print(color, #color)
 
 #endif // WINDOW_H_

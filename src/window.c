@@ -67,3 +67,10 @@ bool WindowShouldClose(GLFWwindow *window)
     return glfwWindowShouldClose(window) ||
            glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
 }
+
+void set_background(Color color)
+{
+    Color color_gl = color_to_gl(color);
+    glClearColor(color_gl.r, color_gl.g, color_gl.b, color_gl.a);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
