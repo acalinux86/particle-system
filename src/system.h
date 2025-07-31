@@ -1,16 +1,12 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
-#include "../utils/array.h"
-#include "../utils/vector2.h"
-#include "../utils/vector3.h"
-#include "../utils/vector4.h"
-#include "../utils/matrix.h"
-#include "../utils/matvec.h"
-#include "../utils/log.h"
+#include "./math_util.h"
+#include "./array.h"
 
 #include <stddef.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -56,4 +52,19 @@ void DetectWindowSizeChange(Renderer *renderer);
 void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector4 color);
 void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color);
 void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 color);
+
+typedef enum {
+    INFO,
+    ERROR,
+    DEBUG,
+    WARN,
+    USAGE,
+    COUNT_LEVELS,
+} Log_Levels;
+
+void Logging(FILE *stream, Log_Levels level, const char *fmt, ...);
+
+#define Log(level, fmt, ...) Logging(stdout, level, fmt, ##__VA_ARGS__)
+#define Logf(stream, level, fmt, ...) Logging(stream, level, fmt, ##__VA_ARGS__)
+
 #endif // WINDOW_H_
