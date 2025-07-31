@@ -67,5 +67,3 @@ bool WindowShouldClose(GLFWwindow *window)
     return glfwWindowShouldClose(window) ||
            glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
 }
-
-
