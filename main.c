@@ -2,12 +2,6 @@
 
 int main(void)
 {
-    Vector3 vec3 = v3_init(400, 100, 0.0f);
-    Vector3 vec3_w = to_world_coords(vec3, 800, 600);
-
-    vec3 = v3_init(1.0f, 0.5f, 0.0f);
-    Vector3 vec3_s = to_screen_coords(vec3, 800, 600);
-    return 0;
     if (!InitOpenGl()) return 1;
 
     int width = 640;
