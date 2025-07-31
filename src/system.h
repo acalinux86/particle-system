@@ -32,10 +32,10 @@ typedef struct {
 } Renderer;
 
 typedef struct {
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
+    float r;
+    float g;
+    float b;
+    float a;
 } Color;
 
 bool InitOpenGl(void);
@@ -75,6 +75,7 @@ void Logging(FILE *stream, Log_Levels level, const char *fmt, ...);
 #define Log(level, fmt, ...) Logging(stdout, level, fmt, ##__VA_ARGS__)
 #define Logf(stream, level, fmt, ...) Logging(stream, level, fmt, ##__VA_ARGS__)
 
+Color gl_to_color(Color color);
 Color color_to_gl(Color color);
 void color_print(Color color, const char *name);
 #define COLOR_PRINT(color) color_print(color, #color)

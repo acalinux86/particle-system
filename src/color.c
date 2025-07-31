@@ -7,7 +7,7 @@ Target Range  => 0...255 => C...D
 static float convert_range(float value, float A, float B, float C, float D)
 {
     float target = ((value - A) * (D - C) / (B - A)) + C;
-    return floorf(target);
+    return target;
 }
 
 Color gl_to_color(Color color)
@@ -32,7 +32,7 @@ Color color_to_gl(Color color)
 
 void color_print(Color color, const char *name)
 {
-    Log(INFO, "%s: [%d, %d, %d, %d]\n",
+    Log(INFO, "%s: [%f, %f, %f, %f]\n",
     name, color.r, color.g, color.b, color.a
     );
 }
