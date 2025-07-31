@@ -4,7 +4,10 @@ int main(void)
 {
     if (!InitOpenGl()) return 1;
 
-    GLFWwindow *window = CreateWindowWithContext(800, 600, "PARTICLE SYSTEM");
+    int width = 640;
+    int height = 480;
+    const char *title = "PARTICLE SYSTEM";
+    GLFWwindow *window = CreateWindowWithContext(width, height, title);
     if (window == NULL)
     {
         return 1;
