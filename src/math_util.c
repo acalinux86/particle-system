@@ -415,7 +415,7 @@ Matrix4 mv4_translate(Vector4 vec_4)
     return result;
 }
 
-Vector3 to_screen_coords(Vector3 vec3, int screen_width, int screen_height)
+Vector3 to_screen_coords(Vector3 vec3, uint32_t screen_width, uint32_t screen_height)
 {
     Vector4 vec4 = v4_from_v3(vec3);
     float x = screen_width / 2.0f;
@@ -434,7 +434,7 @@ Vector3 to_screen_coords(Vector3 vec3, int screen_width, int screen_height)
     return v3_from_v4(TransformedVec4);
 }
 
-Vector3 to_world_coords(Vector3 vec3, int screen_width, int screen_height)
+Vector3 to_world_coords(Vector3 vec3, uint32_t screen_width, uint32_t screen_height)
 {
     Vector4 vec4 = v4_from_v3(vec3);
     float x = 2.0f / screen_width;

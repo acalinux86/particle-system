@@ -19,7 +19,7 @@ bool InitOpenGl(void)
     return true;
 }
 
-GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
+GLFWwindow *CreateWindowWithContext(uint32_t width, uint32_t height, const char *name)
 {
     GLFWwindow *window;
     window = glfwCreateWindow(width, height, name, NULL, NULL);
@@ -49,8 +49,6 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
     const GLubyte *vendor = glGetString(GL_VENDOR);
     Log(INFO, "Vendor: %s\n", vendor);
 
-    glDisable(GL_DEPTH_TEST);
-
     // Enable blend
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -58,6 +56,8 @@ GLFWwindow *CreateWindowWithContext(int width, int height, const char *name)
 
     glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
     Log(INFO, "Input Mode Enabled\n");
+
+    glViewport(0, 0, width, height);
     return window;
 }
 
@@ -72,5 +72,11 @@ void set_background(Color color)
 {
     Color color_gl = color_to_gl(color);
     glClearColor(color_gl.r, color_gl.g, color_gl.b, color_gl.a);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void destroy_window(GLFWwindow *window)
+{
+    glfwDestroyWindow(window);
+    glfwTerminate();
 }
