@@ -47,7 +47,7 @@ int main(void)
 
     double last_time = glfwGetTime();
     double frame_count = 0.0;
-    // Render Many quads on the screen then access each of it
+    // TODO: Render Many quads on the screen then access each of it
     while (!WindowShouldClose(window))
     {
         set_background(GREY);
