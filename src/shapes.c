@@ -1,6 +1,6 @@
 #include "./system.h"
 
-void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector4 color)
+void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Color color)
 {
     if (renderer->va.count + 3 > renderer->va.capacity ||
         renderer->current_mode != GL_TRIANGLES) {
@@ -8,9 +8,9 @@ void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector
         renderer->current_mode = GL_TRIANGLES;
     }
     uint32_t base = renderer->va.count;
-    array_append(&renderer->va, ((Vertex){v1, color}));
-    array_append(&renderer->va, ((Vertex){v2, color}));
-    array_append(&renderer->va, ((Vertex){v3, color}));
+    array_append(&renderer->va, ((Vertex){to_world_coords(v1, renderer->window_width, renderer->window_height), color_to_gl(color)}));
+    array_append(&renderer->va, ((Vertex){to_world_coords(v2, renderer->window_width, renderer->window_height), color_to_gl(color)}));
+    array_append(&renderer->va, ((Vertex){to_world_coords(v3, renderer->window_width, renderer->window_height), color_to_gl(color)}));
 
     uint32_t tri_indices[3] = {base, base+1, base+2};
     for (uint32_t i = 0; i < 3; ++i)
@@ -20,7 +20,7 @@ void DrawTriangle(Renderer *renderer, Vector3 v1, Vector3 v2, Vector3 v3, Vector
     Flush(renderer);
 }
 
-void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
+void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Color color)
 {
     if (renderer->va.count + 2 > renderer->va.capacity ||
         renderer->current_mode != GL_LINES) {
@@ -29,8 +29,8 @@ void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
     }
 
     uint32_t base_index = renderer->va.count;
-    array_append(&renderer->va, ((Vertex){v1, color}));
-    array_append(&renderer->va, ((Vertex){v2, color}));
+    array_append(&renderer->va, ((Vertex){to_world_coords(v1, renderer->window_width, renderer->window_height), color_to_gl(color)}));
+    array_append(&renderer->va, ((Vertex){to_world_coords(v2, renderer->window_width, renderer->window_height), color_to_gl(color)}));
 
     uint32_t line_indices[2] = {base_index, base_index+1};
     for (uint32_t i = 0; i < 2; ++i)
@@ -40,7 +40,7 @@ void DrawLines(Renderer *renderer, Vector3 v1, Vector3 v2, Vector4 color)
     Flush(renderer);
 }
 
-void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 color)
+void DrawRectangle(Renderer *renderer, Vector3 position, Vector3 size, Color color)
 {
     if (renderer->indices.count + 6 > renderer->indices.capacity ||
         renderer->va.count + 4 > renderer->va.capacity ||
@@ -63,7 +63,7 @@ void DrawRectangle(Renderer *renderer, Vector3 size, Vector3 position, Vector4 c
     uint32_t base_index = renderer->indices.count;
     for (uint32_t i = 0; i < 4; ++i)
     {
-        array_append(&renderer->va, ((Vertex){corners[i], color}));
+        array_append(&renderer->va, ((Vertex){to_world_coords(corners[i], renderer->window_width, renderer->window_height), color_to_gl(color)}));
     }
 
     uint32_t quad_indices[6] = {

@@ -75,7 +75,7 @@ void Flush(Renderer *renderer)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, renderer->EBO);
     glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, sizeof(renderer->indices.items[0]) * renderer->indices.count, renderer->indices.items);
-    
+
     glUseProgram(renderer->ProgramID);
     // glUniform4f(glGetUniformLocation(renderer->ProgramID, "fragColor"),
     //             renderer->va.items[0].color.x,
@@ -84,7 +84,7 @@ void Flush(Renderer *renderer)
     //             renderer->va.items[0].color.w);
 
     glDrawElements(renderer->current_mode, renderer->indices.count, GL_UNSIGNED_INT, (void*)0);
-    
+
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
         Log(ERROR, "OpenGL error during draw call: %d\n", err);
@@ -93,7 +93,7 @@ void Flush(Renderer *renderer)
     renderer->va.count = 0;
 }
 
-void DetectWindowSizeChange(Renderer *renderer)
+bool DetectWindowSizeChange(Renderer *renderer)
 {
     int w, h;
     glfwGetWindowSize(renderer->window, &w, &h);
@@ -102,5 +102,8 @@ void DetectWindowSizeChange(Renderer *renderer)
         Log(INFO, "Window Size Change Detected: Width: %d, Height: %d\n", w, h);
         renderer->window_width = w;
         renderer->window_height = h;
+        glViewport(0, 0, w, h);
+        return true;
     }
+    return false;
 }
