@@ -1,5 +1,5 @@
 #include "./math_util.h"
-
+#include "./system.h"
 // NOTE: VECTOR2 Implementation
 Vector2 v2_init(float x, float y)
 {
@@ -418,8 +418,6 @@ Matrix4 mv4_translate(Vector4 vec_4)
 Vector3 to_screen_coords(Vector3 vec3, int screen_width, int screen_height)
 {
     Vector4 vec4 = v4_from_v3(vec3);
-    V4_PRINT(vec4);
-
     float x = screen_width / 2.0f;
     float y = screen_height / 2.0f;
 
@@ -431,16 +429,14 @@ Vector3 to_screen_coords(Vector3 vec3, int screen_width, int screen_height)
             {0.0f, 0.0f, 0.0f, 1.0f}
         }
     };
-    Vector4 TransformedVec4 = mv4_transform(ModelMatrix, vec4);
-    V4_PRINT(TransformedVec4);
 
+    Vector4 TransformedVec4 = mv4_transform(ModelMatrix, vec4);
     return v3_from_v4(TransformedVec4);
 }
 
 Vector3 to_world_coords(Vector3 vec3, int screen_width, int screen_height)
 {
     Vector4 vec4 = v4_from_v3(vec3);
-    V4_PRINT(vec4);
     float x = 2.0f / screen_width;
     float y = 2.0f / screen_height;
 
@@ -454,7 +450,5 @@ Vector3 to_world_coords(Vector3 vec3, int screen_width, int screen_height)
     };
 
     Vector4 TransformedVec4 = mv4_transform(ModelMatrix, vec4);
-    V4_PRINT(TransformedVec4);
-
     return v3_from_v4(TransformedVec4);
 }
