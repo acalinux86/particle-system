@@ -17,12 +17,12 @@
     }
 
 // NOTE: New Array
-#define array_new(array, new_capacity)                                                           \
+#define array_new(array)                                             \
     do {                                                                           \
-        (array)->items = calloc(new_capacity, sizeof(*(array)->items));       \
+        (array)->items = calloc(INITIAL_CAPACITY, sizeof(*(array)->items));            \
         assert((array)->items != NULL && "Initial malloc() for new Array Failed"); \
         (array)->count = 0;                                                        \
-        (array)->capacity = new_capacity;                                      \
+        (array)->capacity = INITIAL_CAPACITY;                                          \
     } while(0)
 
 // NOTE: Remove An Element of Specified Index and Shift the Array
@@ -81,10 +81,9 @@
 #define array_analysis(array)\
     printf("Array Count: %u\nArray Capacity: %u\n\n", (array)->count, (array)->capacity);\
 
-#define array_reset(array)                    \
-    do {                                      \
-        array_delete((array));                \
-        array_new((array), INITIAL_CAPACITY); \
+#define array_clear(array)  \
+    do {                    \
+        (array)->count = 0; \
     } while (0)
 
 
